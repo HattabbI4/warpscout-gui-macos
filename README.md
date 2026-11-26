@@ -6,7 +6,7 @@
 <p>
   <a href="https://github.com/HattabbI4/warpscout-gui-macos/releases/latest"><img src="https://img.shields.io/github/v/release/HattabbI4/warpscout-gui-macos?style=flat-square" alt="Release"></a>
   <a href="https://github.com/HattabbI4/warpscout-gui-macos/releases"><img src="https://img.shields.io/github/downloads/HattabbI4/warpscout-gui-macos/total?style=flat-square" alt="Downloads"></a>
-  <a href="https://github.com/HattabbI4/warpscout-gui-macos/actions/workflows/ci.yaml"><img src="https://img.shields.io/github/actions/workflow/status/HattabbI4/warpscout-gui-macos/ci.yaml?style=flat-square&amp;label=CI" alt="CI"></a>
+  <a href="https://github.com/HattabbI4/warpscout-gui-macos/actions/workflows/release.yaml"><img src="https://img.shields.io/github/actions/workflow/status/HattabbI4/warpscout-gui-macos/release.yaml?style=flat-square&amp;label=CI" alt="CI"></a>
   <a href="#установка"><img src="https://img.shields.io/badge/macOS-26%2B-555555?style=flat-square" alt="macOS 26+"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT"></a>
 </p>

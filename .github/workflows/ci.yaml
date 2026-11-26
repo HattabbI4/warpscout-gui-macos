@@ -1,14 +1,5 @@
 name: CI
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-  workflow_dispatch:
-    inputs:
-      live:
-        description: Register a separate Cloudflare WARP device and run live endpoint checks
-        type: boolean
-        default: false
   workflow_call:
 
 permissions:
@@ -28,8 +19,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Build and test
-        env:
-          WARPSCOUT_LIVE_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.live && matrix.runner == 'macos-26' && '1' || '0' }}
         run: ./scripts/test.sh
       - name: Test release scripts
         run: python3 -m unittest discover -s Tests -p 'test_*.py'

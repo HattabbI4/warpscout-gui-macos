@@ -2,7 +2,7 @@
 
 <img src="docs/app.png" width="84" alt="WarpScout">
 <h1>WarpScout for macOS</h1>
-<p>A native Mac app for finding working Cloudflare® WARP® endpoints on Apple Silicon and Intel.</p>
+<p>A native Mac app for finding working WARP® endpoints on Apple Silicon and Intel.</p>
 <p>
   <a href="https://github.com/HattabbI4/warpscout-gui-macos/releases/latest"><img src="https://img.shields.io/github/v/release/HattabbI4/warpscout-gui-macos?style=flat-square" alt="Release"></a>
   <a href="https://github.com/HattabbI4/warpscout-gui-macos/releases"><img src="https://img.shields.io/github/downloads/HattabbI4/warpscout-gui-macos/total?style=flat-square" alt="Downloads"></a>
@@ -14,6 +14,8 @@
 
 </div>
 
+**[Windows version](https://github.com/HattabbI4/warpscout-gui)**
+
 ## Installation
 
 1. Download the ZIP for your Mac: **[Apple Silicon](https://github.com/HattabbI4/warpscout-gui-macos/releases/latest/download/WarpScout-macOS-arm64.zip)** or **[Intel](https://github.com/HattabbI4/warpscout-gui-macos/releases/latest/download/WarpScout-macOS-x86_64.zip)**. Requires macOS 26 or later. Check your chip or processor under  → About This Mac.
@@ -22,14 +24,15 @@
 
 Choose the archive for your Mac on first install. WarpScout selects the matching architecture automatically for subsequent updates.
 
-On first launch the app downloads the core for your processor from the [latest stable warpscout release](https://github.com/vernette/warpscout/releases/latest), verifies its size, SHA-256 and version, and installs it at `~/Library/Application Support/WarpScout/warpscout`. First-time setup requires internet access. If it fails, open Settings and choose **Download core**, or select a local executable. Subsequent launches reuse the installed copy. The core registers a WARP device on the first scan. The standard scanner excludes DME by default. If there are no results and Moscow nodes are acceptable, turn off **Exclude edge node** and scan again. For core version 0.17.0, see the [security assessment](docs/release-readiness.md).
+On first launch, the app automatically downloads the core for your processor from the [latest stable warpscout release](https://github.com/vernette/warpscout/releases/latest) and installs it at `~/Library/Application Support/WarpScout/warpscout`. If installation fails, open Settings and choose **Download core**, or select a local executable.
+Subsequent launches use the installed copy. The core registers a WARP device on the first scan.
 
 ## Features
 
 - **Scanner.** Test AmneziaWG, AmneziaWG 3.1, WireGuard, MASQUE (QUIC) and MASQUE H2 (TCP). Filter edge nodes, measure tunnel latency and packet loss, scan whole subnets and test download speed.
 - **Advanced scanner.** Enter `warpscout scan` arguments and follow progress in the live log. AWG 3.1 supports padding and handshake settings.
 - **Servers.** Results appear as the scan runs. Click an address to copy it, export a `.conf` or `.json` profile, or start a local SOCKS5 proxy at `127.0.0.1:1080`. The menu bar provides proxy controls.
-- **Settings.** Select or update the core, register a device or regenerate its key, and switch between Russian and English. The app verifies Ed25519 signatures for upgrades and rollbacks.
+- **Settings.** Select or update the core, register a device or regenerate its key, and switch between Russian and English.
 
 ## Screenshots
 
@@ -63,10 +66,10 @@ Tests use a temporary source tree and a disposable signing key. The window test 
 
 ## Data and feedback
 
-The account and last scan are stored in `~/Library/Application Support/WarpScout/`. Account files and exported profiles contain private keys. When reporting a bug, include the app, core and macOS versions and steps to reproduce with test data. [Issues](https://github.com/HattabbI4/warpscout-gui-macos/issues) · [Private security reports](SECURITY.md) · [Release instructions](docs/releases.md)
+The account and last scan are stored in `~/Library/Application Support/WarpScout/`. Account files and exported profiles contain private keys. When reporting a bug, include the app, core and macOS versions and steps to reproduce with test data. [Issues](https://github.com/HattabbI4/warpscout-gui-macos/issues) · [Private security reports](SECURITY.md)
 
-## License and credits
+## Credits
 
-Copyright **HattabbI4**. The GUI is available under the [MIT license](LICENSE). Its interface is adapted from [WarpScout GUI for Windows](https://github.com/HattabbI4/warpscout-gui). Scanning is powered by [vernette/warpscout](https://github.com/vernette/warpscout). The core has its [own license](https://github.com/vernette/warpscout/blob/master/LICENSE).
+- [vernette/warpscout](https://github.com/vernette/warpscout) provides the command-line WARP scanner, generates configuration files, and runs the local SOCKS5 proxy.
 
 WarpScout is an independent project. Cloudflare and WARP are trademarks of Cloudflare, Inc.

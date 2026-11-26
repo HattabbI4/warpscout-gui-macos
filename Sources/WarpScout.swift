@@ -681,17 +681,19 @@ private struct Workspace: View {
     .disclosureGroupStyle(RowDisclosureStyle())
   }
 
+  private var serverSummary: String {
+    if !copiedEndpoint.isEmpty { return tr("Скопировано") + " · " + copiedEndpoint }
+    let scan = engine.scan
+    let date = scan.date?.formatted() ?? "—"
+    return "\(scan.rows.count) · \(scan.proto) · \(date)"
+  }
+
   private var servers: some View {
     VStack(alignment: .leading, spacing: 16) {
       HStack {
         VStack(alignment: .leading, spacing: 4) {
           Text(tr("Рабочие серверы")).font(.title2.weight(.semibold))
-          Text(
-            copiedEndpoint.isEmpty
-              ? "\(engine.scan.rows.count) · " + engine.scan.proto + " · "
-                + (engine.scan.date?.formatted() ?? "—")
-              : tr("Скопировано") + " · " + copiedEndpoint
-          ).foregroundStyle(.secondary)
+          Text(serverSummary).foregroundStyle(.secondary)
         }
         Spacer()
         Button(

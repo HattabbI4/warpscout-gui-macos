@@ -1,0 +1,15 @@
+.DS_Store
+._*
+/dist/
+/preview/
+.build/
+__pycache__/
+*.pyc
+.env
+.env.*
+*.key
+*.pem
+*.p12
+account.json
+warpscout-account.json
+scan.json

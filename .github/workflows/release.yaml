@@ -1,0 +1,130 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yaml
+
+  build:
+    needs: ci
+    if: github.ref_type == 'tag'
+    environment: release-signing
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify release version
+        shell: bash
+        run: |
+          version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)
+          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && "$GITHUB_REF_NAME" == "v$version" ]]
+      - run: ./scripts/build.sh
+      - name: Sign the release archive
+        shell: bash
+        env:
+          SIGNING_KEY_B64: ${{ secrets.WARPSCOUT_SIGNING_KEY_B64 }}
+        run: |
+          set -eu
+          : "${SIGNING_KEY_B64:?Set WARPSCOUT_SIGNING_KEY_B64 in release-signing}"
+          umask 077
+          key=$(mktemp "$RUNNER_TEMP/warpscout-sign.XXXXXXXX")
+          trap 'rm -f "$key"' EXIT
+          printf '%s' "$SIGNING_KEY_B64" | base64 -D > "$key"
+          unset SIGNING_KEY_B64
+          for arch in arm64 x86_64; do
+            swift tools/release-sign.swift sign "$key" "dist/WarpScout-macOS-$arch.zip"
+          done
+      - name: Generate release notes
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY || secrets.GEMINI_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+        run: python3 .github/scripts/generate_release_notes.py --tag "$GITHUB_REF_NAME" --output dist/release-notes.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-release
+          path: |
+            dist/WarpScout-macOS-arm64.zip
+            dist/WarpScout-macOS-arm64.zip.sig
+            dist/WarpScout-macOS-x86_64.zip
+            dist/WarpScout-macOS-x86_64.zip.sig
+            dist/release-notes.md
+          if-no-files-found: error
+
+  verify:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            arch: arm64
+          - runner: macos-26-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: macos-release
+          path: dist
+      - name: Install signed release and open its window
+        env:
+          WARPSCOUT_TEST_FIRST_LAUNCH: "1"
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: |
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          ./scripts/test-distribution.sh
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: publish-stable-release
+      queue: max
+    permissions:
+      contents: write
+    env:
+      GH_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: macos-release
+          path: dist
+      - name: Verify signatures with the previous stable release's keys
+        run: bash .github/scripts/verify-release-continuity.sh
+      - name: Append GitHub contributors and changelog
+        run: python3 .github/scripts/generate_release_notes.py --append-github-footer --output dist/release-notes.md
+      - name: Publish verified assets
+        run: |
+          tag="$GITHUB_REF_NAME"
+          if draft=$(gh release view "$tag" --json isDraft --jq '.isDraft'); then
+            [[ "$draft" == true ]] || { echo "Release is already public"; exit 1; }
+            gh release edit "$tag" --notes-file dist/release-notes.md
+          else
+            gh release create "$tag" --verify-tag --draft --title "WarpScout $tag" --notes-file dist/release-notes.md
+          fi
+          gh release upload "$tag" dist/WarpScout-macOS-{arm64,x86_64}.zip{,.sig} --clobber
+          gh release edit "$tag" --draft=false
